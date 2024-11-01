@@ -1,5 +1,6 @@
 export class Login {
-    constructor() {
+    constructor(openNewRoute) {
+        this.openNewRoute = openNewRoute;
         this.emailElement = document.getElementById('email');
         this.passwordElement = document.getElementById('password');
         this.rememberMeElement = document.getElementById('remember-me');
@@ -44,10 +45,16 @@ export class Login {
             const result = await response.json();
             if (result.error || !result.accessToken || !result.refreshToken || !result.name || !result.id) {
                 this.commonErrorElement.style.display = 'block';
+                return;
             }
-            console.log(result);
-        } else {
-
+            // записывает данные в localStorage
+            localStorage.setItem('accessToken', result.accessToken);
+            localStorage.setItem('refreshToken', result.refreshToken);
+            localStorage.setItem('userInfo', JSON.stringify({
+                id: result.id,
+                name: result.name,
+            }));
+            this.openNewRoute('/');
         }
     }
 }
