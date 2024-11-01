@@ -17,6 +17,9 @@ export class Router {
                 load: () => {
                     new Dashboard();
                 },
+                unload: () => {
+
+                },
             },
             {
                 route: '/404',
@@ -34,6 +37,10 @@ export class Router {
                     document.body.style.height = '100vh';
                     new Login();
                 },
+                unload: () => {
+                    document.body.classList.remove('login-page');
+                    document.body.style.height = 'auto';
+                },
                 styles: ['icheck-bootstrap.min.css'],
             },
             {
@@ -46,6 +53,10 @@ export class Router {
                     document.body.style.height = '100vh';
                     new SignUp();
                 },
+                unload: () => {
+                    document.body.classList.remove('register-page');
+                    document.body.style.height = 'auto';
+                },
                 styles: ['icheck-bootstrap.min.css'],
             },
         ];
@@ -54,9 +65,43 @@ export class Router {
     initEvents() {
         window.addEventListener('DOMContentLoaded', this.activateRoute.bind(this)); // событие при загрузке страницы
         window.addEventListener('popstate', this.activateRoute.bind(this)); // событие при переходе на другую страницу
+        document.addEventListener('click', this.openNewRoute.bind(this));
     }
 
-    async activateRoute() {
+    // ручная обработка ссылок
+    async openNewRoute(e) {
+        let element = null;
+        if (e.target.nodeName === 'A') {
+            element = e.target;
+        } else if (e.target.parentNode.nodeName === 'A') {
+            element = e.target.parentNode;
+        }
+        if (element) {
+            e.preventDefault();
+            const url = element.href.replace(window.location.origin, ''); // удаляем корневую часть URL
+            if (!url || url === '/#' || url.startsWith('javascript:void(0)')) {
+                return;
+            }
+            const currentRoute = window.location.pathname; // получаем текущий путь URL из адресной строки
+            history.pushState({}, '', url); // подставляем к адресу полученный url
+            await this.activateRoute(null, currentRoute);
+        }
+    }
+
+    async activateRoute(e, oldRoute = null) {
+        if (oldRoute) {
+            const currentRoute = this.routes.find(item => item.route === oldRoute); // берем старый route
+            if (currentRoute.styles && currentRoute.styles.length > 0) {
+                // находим и удаляем старые стили
+                currentRoute.styles.forEach(style => {
+                    document.querySelector(`link[href='/css/${style}']`).remove();
+                });
+            }
+            if (currentRoute.unload && typeof currentRoute.unload === 'function') {
+                currentRoute.unload();
+            }
+        }
+
         const urlRoute = window.location.pathname; // получаем текущий путь URL из адресной строки
         const newRoute = this.routes.find(item => item.route === urlRoute); // ищем полученный путь в массиве routes
 
@@ -74,7 +119,6 @@ export class Router {
                 this.titlePageElement.innerText = newRoute.title + ' | Freelance Studio';
             }
             if (newRoute.filePathTemplate) {
-                document.body.className = ''; // очищаем body от всех классов
                 let contentBlock = this.contentPageElement;
                 // использование layout
                 if (newRoute.useLayout) {
@@ -97,7 +141,8 @@ export class Router {
             }
         } else {
             console.log('No route found');
-            window.location = '/404';
+            history.pushState({}, '', '/404'); // подставляем к адресу /404
+            await this.activateRoute();
         }
     }
 }
