@@ -1,6 +1,12 @@
 export class Login {
     constructor(openNewRoute) {
         this.openNewRoute = openNewRoute;
+
+        // если пользователь уже находится в системе, перенаправляем его на главную страницу
+        if (localStorage.getItem('accessToken')) {
+            return this.openNewRoute('/');
+        }
+
         this.emailElement = document.getElementById('email');
         this.passwordElement = document.getElementById('password');
         this.rememberMeElement = document.getElementById('remember-me');
@@ -10,6 +16,7 @@ export class Login {
 
     validateForm() {
         let isValid = true;
+
         // валидация поля email
         if (this.emailElement.value && this.emailElement.value.match(/^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/)) {
             this.emailElement.classList.remove('is-invalid');
@@ -17,6 +24,7 @@ export class Login {
             this.emailElement.classList.add('is-invalid');
             isValid = false;
         }
+
         // валидация поля password
         if (this.passwordElement.value) {
             this.passwordElement.classList.remove('is-invalid');
