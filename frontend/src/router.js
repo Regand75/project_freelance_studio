@@ -70,7 +70,7 @@ export class Router {
                 filePathTemplate: '/templates/pages/freelancers/list.html',
                 useLayout: '/templates/layout.html',
                 load: () => {
-                    new FreelancersList();
+                    new FreelancersList(this.openNewRoute.bind(this));
                 },
             },
         ];
