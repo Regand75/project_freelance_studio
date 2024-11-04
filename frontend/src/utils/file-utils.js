@@ -8,4 +8,20 @@ export class FileUtils {
             document.body.appendChild(script);
         });
     }
+
+    static onloadPageScript(script) {
+        document.querySelector(`script[src='/js/${script}']`).remove();
+    }
+
+    static loadPageStyle(src, insertBeforeElement) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = src;
+        document.head.insertBefore(link, insertBeforeElement);
+    }
+
+    static onloadPageStyle(style) {
+        document.querySelector(`link[href='/css/${style}']`).remove();
+    }
 }

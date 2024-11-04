@@ -101,8 +101,9 @@ export class Router {
         }
         if (element) {
             e.preventDefault();
+            const currentRoute = window.location.pathname;
             const url = element.href.replace(window.location.origin, ''); // удаляем корневую часть URL
-            if (!url || url === '/#' || url.startsWith('javascript:void(0)')) {
+            if (!url || (currentRoute === url.replace('#', '')) || url.startsWith('javascript:void(0)')) {
                 return;
             }
             await this.openNewRoute(url);
@@ -115,14 +116,14 @@ export class Router {
             if (currentRoute.styles && currentRoute.styles.length > 0) {
                 // находим и удаляем старые стили
                 currentRoute.styles.forEach(style => {
-                    document.querySelector(`link[href='/css/${style}']`).remove();
+                    FileUtils.onloadPageStyle(style);
                 });
             }
 
             if (currentRoute.scripts && currentRoute.scripts.length > 0) {
                 // находим и удаляем старые scripts
-                currentRoute.scripts.forEach(url => {
-                    document.querySelector(`script[src='/js/${url}']`).remove();
+                currentRoute.scripts.forEach(script => {
+                    FileUtils.onloadPageScript(script);
                 });
             }
 
@@ -138,10 +139,7 @@ export class Router {
             if (newRoute.styles && newRoute.styles.length > 0) {
                 // добавляем ссылку на стили css на страницу index.html в секцию <head>
                 newRoute.styles.forEach(style => {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = `/css/${style}`;
-                    document.head.insertBefore(link, this.adminlteStyleElement);
+                    FileUtils.loadPageStyle(`/css/${style}`, this.adminlteStyleElement);
                 });
             }
 

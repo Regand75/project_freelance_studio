@@ -59,5 +59,17 @@ export class FreelancersList {
 
             recordsElement.appendChild(trElement);
         }
+
+        new DataTable('#data-table', {
+            language: {
+                "lengthMenu": "Показывать _MENU_ записей на странице",
+                "search": "Фильтр:",
+                "info": "Страница _PAGE_ из _PAGES_",
+                "paginate": {
+                    "next": "Вперед",
+                    "previous": "Назад"
+                },
+            }
+        });
     }
 }
