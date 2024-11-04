@@ -4,6 +4,7 @@ import {SignUp} from "./components/auth/sign-up";
 import {Logout} from "./components/auth/logout";
 import {FreelancersList} from "./components/freelancers/freelancers-list";
 import {FileUtils} from "./utils/file-utils";
+import {FreelancersView} from "./components/freelancers/freelancers-view";
 
 export class Router {
     constructor() {
@@ -66,7 +67,7 @@ export class Router {
                 },
             },
             {
-                route: '/freelances',
+                route: '/freelancers',
                 title: 'Фрилансеры',
                 filePathTemplate: '/templates/pages/freelancers/list.html',
                 useLayout: '/templates/layout.html',
@@ -75,6 +76,15 @@ export class Router {
                 },
                 styles: ['dataTables.bootstrap4.min.css'],
                 scripts: ['jquery.dataTables.min.js', 'dataTables.bootstrap4.min.js'],
+            },
+            {
+                route: '/freelancers/view',
+                title: 'Фрилансер',
+                filePathTemplate: '/templates/pages/freelancers/view.html',
+                useLayout: '/templates/layout.html',
+                load: () => {
+                    new FreelancersView(this.openNewRoute.bind(this));
+                },
             },
         ];
     }
