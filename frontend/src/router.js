@@ -3,6 +3,7 @@ import {Login} from "./components/auth/login";
 import {SignUp} from "./components/auth/sign-up";
 import {Logout} from "./components/auth/logout";
 import {FreelancersList} from "./components/freelancers/freelancers-list";
+import {FileUtils} from "./utils/file-utils";
 
 export class Router {
     constructor() {
@@ -72,6 +73,8 @@ export class Router {
                 load: () => {
                     new FreelancersList(this.openNewRoute.bind(this));
                 },
+                styles: ['dataTables.bootstrap4.min.css'],
+                scripts: ['jquery.dataTables.min.js', 'dataTables.bootstrap4.min.js'],
             },
         ];
     }
@@ -115,6 +118,14 @@ export class Router {
                     document.querySelector(`link[href='/css/${style}']`).remove();
                 });
             }
+
+            if (currentRoute.scripts && currentRoute.scripts.length > 0) {
+                // находим и удаляем старые scripts
+                currentRoute.scripts.forEach(url => {
+                    document.querySelector(`script[src='/js/${url}']`).remove();
+                });
+            }
+
             if (currentRoute.unload && typeof currentRoute.unload === 'function') {
                 currentRoute.unload();
             }
@@ -133,9 +144,18 @@ export class Router {
                     document.head.insertBefore(link, this.adminlteStyleElement);
                 });
             }
+
+            if (newRoute.scripts && newRoute.scripts.length > 0) {
+                // добавляем ссылку на scripts на страницу index.html>
+                for (const script of newRoute.scripts) {
+                    await FileUtils.loadPageScript(`/js/${script}`);
+                }
+            }
+
             if (newRoute.title) {
                 this.titlePageElement.innerText = newRoute.title + ' | Freelance Studio';
             }
+
             if (newRoute.filePathTemplate) {
                 let contentBlock = this.contentPageElement;
                 // использование layout
@@ -154,6 +174,7 @@ export class Router {
                 contentBlock.innerHTML = await fetch(newRoute.filePathTemplate)
                     .then(response => response.text());
             }
+
             if (newRoute.load && typeof newRoute.load === 'function') {
                 newRoute.load();
             }

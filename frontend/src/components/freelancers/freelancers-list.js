@@ -1,4 +1,5 @@
 import {HttpUtils} from "../../utils/http-utils";
+import config from "../../config/config";
 
 export class FreelancersList {
     constructor(openNewRoute) {
@@ -20,6 +21,43 @@ export class FreelancersList {
     }
 
     showRecords(freelancers) {
-        console.log(freelancers);
+        const recordsElement = document.getElementById('records');
+        // заполняем таблицу данными о фрилансерах
+        for (let i = 0; i < freelancers.length; i++) {
+            const trElement = document.createElement('tr');
+            trElement.insertCell().innerText = i + 1;
+            trElement.insertCell().innerHTML = freelancers[i].avatar ? `<img class="freelancer-avatar" src="${config.host}${freelancers[i].avatar}" alt="User Image">` : '';
+            trElement.insertCell().innerText = `${freelancers[i].name} ${freelancers[i].lastName}`;
+            trElement.insertCell().innerText = freelancers[i].email;
+
+            let levelHtml = null;
+            switch (freelancers[i].level) {
+                case config.freelancerLevels.junior:
+                    levelHtml = `<span class="badge badge-info">junior</span>`;
+                    break;
+                case config.freelancerLevels.middle:
+                    levelHtml = `<span class="badge badge-warning">middle</span>`;
+                    break;
+                case config.freelancerLevels.senior:
+                    levelHtml = `<span class="badge badge-success">senior</span>`;
+                    break;
+                default:
+                    levelHtml = `<span class="badge badge-secondary">Unknown</span>`;
+            }
+
+            trElement.insertCell().innerHTML = levelHtml;
+            trElement.insertCell().innerText = freelancers[i].education;
+            trElement.insertCell().innerText = freelancers[i].location;
+            trElement.insertCell().innerText = freelancers[i].skills;
+            trElement.insertCell().innerHTML = `
+                <div class="freelancer-tools">
+                    <a href="/freelancers/view?id=${freelancers[i].id}" class="fas fa-eye"></a>
+                    <a href="/freelancers/edit?id=${freelancers[i].id}" class="fas fa-edit"></a>
+                    <a href="/freelancers/delete?id=${freelancers[i].id}" class="fas fa-trash"></a>
+                </div>
+            `;
+
+            recordsElement.appendChild(trElement);
+        }
     }
 }
