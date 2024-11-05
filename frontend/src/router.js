@@ -5,6 +5,9 @@ import {Logout} from "./components/auth/logout";
 import {FreelancersList} from "./components/freelancers/freelancers-list";
 import {FileUtils} from "./utils/file-utils";
 import {FreelancersView} from "./components/freelancers/freelancers-view";
+import {FreelancersCreate} from "./components/freelancers/freelancers-create";
+import {FreelancersEdit} from "./components/freelancers/freelancers-edit";
+import {FreelancersDelete} from "./components/freelancers/freelancers-delete";
 
 export class Router {
     constructor() {
@@ -42,7 +45,9 @@ export class Router {
                     document.body.classList.remove('login-page');
                     document.body.style.height = 'auto';
                 },
-                styles: ['icheck-bootstrap.min.css'],
+                styles: [
+                    'icheck-bootstrap.min.css'
+                ],
             },
             {
                 route: '/sign-up',
@@ -58,7 +63,9 @@ export class Router {
                     document.body.classList.remove('register-page');
                     document.body.style.height = 'auto';
                 },
-                styles: ['icheck-bootstrap.min.css'],
+                styles: [
+                    'icheck-bootstrap.min.css'
+                ],
             },
             {
                 route: '/logout',
@@ -74,8 +81,13 @@ export class Router {
                 load: () => {
                     new FreelancersList(this.openNewRoute.bind(this));
                 },
-                styles: ['dataTables.bootstrap4.min.css'],
-                scripts: ['jquery.dataTables.min.js', 'dataTables.bootstrap4.min.js'],
+                styles: [
+                    'dataTables.bootstrap4.min.css'
+                ],
+                scripts: [
+                    'jquery.dataTables.min.js',
+                    'dataTables.bootstrap4.min.js'
+                ],
             },
             {
                 route: '/freelancers/view',
@@ -84,6 +96,36 @@ export class Router {
                 useLayout: '/templates/layout.html',
                 load: () => {
                     new FreelancersView(this.openNewRoute.bind(this));
+                },
+            },
+            {
+                route: '/freelancers/create',
+                title: 'Создание фрилансера',
+                filePathTemplate: '/templates/pages/freelancers/create.html',
+                useLayout: '/templates/layout.html',
+                load: () => {
+                    new FreelancersCreate(this.openNewRoute.bind(this));
+                },
+                scripts: [
+                    'bs-custom-file-input.min.js'
+                ],
+            },
+            {
+                route: '/freelancers/edit',
+                title: 'Редактирование фрилансера',
+                filePathTemplate: '/templates/pages/freelancers/edit.html',
+                useLayout: '/templates/layout.html',
+                load: () => {
+                    new FreelancersEdit(this.openNewRoute.bind(this));
+                },
+                scripts: [
+                    'bs-custom-file-input.min.js'
+                ],
+            },
+            {
+                route: '/freelancers/delete',
+                load: () => {
+                    new FreelancersDelete(this.openNewRoute.bind(this));
                 },
             },
         ];

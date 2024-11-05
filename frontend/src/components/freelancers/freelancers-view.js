@@ -37,9 +37,9 @@ export class FreelancersView {
         if (freelancer.avatar) {
             document.getElementById('avatar').src = `${config.host}${freelancer.avatar}`;
         }
+        document.getElementById('level').innerHTML = CommonUtils.getLevelHtml(freelancer.level);
 
         document.getElementById('name').innerText = `${freelancer.name} ${freelancer.lastName}`;
-        document.getElementById('level').innerHTML = CommonUtils.getLevelHtml(freelancer.level);
         document.getElementById('email').innerText = freelancer.email;
         document.getElementById('education').innerText = freelancer.education;
         document.getElementById('location').innerText = freelancer.location;
