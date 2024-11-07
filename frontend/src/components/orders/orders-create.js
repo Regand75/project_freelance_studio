@@ -1,4 +1,5 @@
 import {HttpUtils} from "../../utils/http-utils";
+import {FileUtils} from "../../utils/file-utils";
 
 export class OrdersCreate {
     constructor(openNewRoute) {
@@ -19,9 +20,8 @@ export class OrdersCreate {
             },
             useCurrent: false,
         });
-        calendarScheduled.on("change.datetimepicker", function (e) {
+        calendarScheduled.on("change.datetimepicker", (e) => {
             this.scheduledDate = e.date;
-            console.log(this.scheduledDate);
         });
 
         const calendarComplete = $('#calendar-complete');
@@ -36,9 +36,8 @@ export class OrdersCreate {
                 showClear: true,
             }
         });
-        calendarComplete.on("change.datetimepicker", function (e) {
+        calendarComplete.on("change.datetimepicker", (e) => {
             this.completeDate = e.date;
-            console.log(this.completeDate);
         });
 
         const calendarDeadline = $('#calendar-deadline');
@@ -50,14 +49,17 @@ export class OrdersCreate {
             },
             useCurrent: false,
         });
-        calendarDeadline.on("change.datetimepicker", function (e) {
+        calendarDeadline.on("change.datetimepicker", (e) => {
             this.deadlineDate = e.date;
-            console.log(this.deadlineDate);
         });
 
         this.freelancerSelectElement = document.getElementById('freelancerSelect');
+        this.statusSelectElement = document.getElementById('statusSelect');
         this.amountInputElement = document.getElementById('amountInput');
         this.descriptionInputElement = document.getElementById('descriptionInput');
+        this.scheduledCardElement = document.getElementById('scheduled-card');
+        this.completeCardElement = document.getElementById('complete-card');
+        this.deadlineCardElement = document.getElementById('deadline-card');
 
         this.getFreelancers().then();
     }
@@ -92,6 +94,16 @@ export class OrdersCreate {
             this.amountInputElement,
             this.descriptionInputElement,
         ];
+        let calenderCardArray = [
+            {
+                date: this.scheduledDate,
+                cardElement: this.scheduledCardElement,
+            },
+            {
+                date: this.deadlineDate,
+                cardElement: this.deadlineCardElement,
+            },
+        ];
 
         for (let i = 0; i < textInputArray.length; i++) {
             // валидация полей
@@ -103,7 +115,29 @@ export class OrdersCreate {
             }
         }
 
+        for (let i = 0; i < calenderCardArray.length; i++) {
+            // валидация полей
+            if (calenderCardArray[i].date) {
+                calenderCardArray[i].cardElement.classList.remove('is-invalid');
+            } else {
+                calenderCardArray[i].cardElement.classList.add('is-invalid');
+                isValid = false;
+            }
+        }
 
+        // if (this.scheduledDate) {
+        //     this.scheduledCardElement.classList.remove('is-invalid');
+        // } else {
+        //     this.scheduledCardElement.classList.add('is-invalid');
+        //     isValid = false;
+        // }
+        //
+        // if (this.deadlineDate) {
+        //     this.deadlineCardElement.classList.remove('is-invalid');
+        // } else {
+        //     this.deadlineCardElement.classList.add('is-invalid');
+        //     isValid = false;
+        // }
 
         return isValid;
     }
@@ -111,7 +145,30 @@ export class OrdersCreate {
     async saveOrder(e) {
         e.preventDefault();
         if (this.validateForm()) {
-            console.log('VALID');
+            const createData = {
+                description: this.descriptionInputElement.value,
+                deadlineDate: this.deadlineDate.toISOString(),
+                scheduledDate: this.scheduledDate.toISOString(),
+                freelancer: this.freelancerSelectElement.value,
+                status: this.statusSelectElement.value,
+                amount: parseInt(this.amountInputElement.value),
+            };
+
+            if (this.completeDate) {
+                createData.completeDate = this.completeDate.toISOString();
+            }
+
+            const result = await HttpUtils.request(`/orders`, 'POST', true, createData);
+
+            if (result.redirect) {
+                return this.openNewRoute(result.redirect);
+            }
+
+            if (result.error || !result.response || (result.response && result.response.error)) {
+                console.log(result.response.message);
+                return alert('Возникла ошибка при добавлении заказа. Обратитесь в поддержку');
+            }
+            return this.openNewRoute(`/orders/view?id=${result.response.id}`);
         }
     }
 }
