@@ -1,5 +1,4 @@
 import {HttpUtils} from "../../utils/http-utils";
-import {FileUtils} from "../../utils/file-utils";
 
 export class OrdersCreate {
     constructor(openNewRoute) {
