@@ -27,8 +27,17 @@ export class Router {
                 filePathTemplate: '/templates/pages/dashboard.html',
                 useLayout: '/templates/layout.html',
                 load: () => {
-                    new Dashboard();
+                    new Dashboard(this.openNewRoute.bind(this));
                 },
+                styles: [
+                    'fullcalendar.css',
+                ],
+                scripts: [
+                    'moment.min.js',
+                    'moment-ru-locale.js',
+                    'fullcalendar.js',
+                    'fullcalendar-local-ru.js',
+                ],
             },
             {
                 route: '/404',
@@ -292,6 +301,7 @@ export class Router {
                     // добавляем классы для правильного скрытия левой панели
                     document.body.classList.add('sidebar-mini');
                     document.body.classList.add('layout-fixed');
+                    this.activateMenuItem(newRoute); // подсвечиваем активное меню
                 } else {
                     document.body.classList.remove('sidebar-mini');
                     document.body.classList.remove('layout-fixed');
@@ -309,5 +319,16 @@ export class Router {
             history.pushState({}, '', '/404'); // подставляем к адресу /404
             await this.activateRoute();
         }
+    }
+
+    activateMenuItem(route) {
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if ((route.route.includes(href) && href !== '/') || (route.route === "/" && href === '/')) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        })
     }
 }
