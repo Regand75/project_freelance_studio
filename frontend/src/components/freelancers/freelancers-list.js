@@ -1,6 +1,6 @@
-import {HttpUtils} from "../../utils/http-utils";
 import config from "../../config/config";
 import {CommonUtils} from "../../utils/common-utils";
+import {FreelancersService} from "../../services/freelancers-service";
 
 export class FreelancersList {
     constructor(openNewRoute) {
@@ -9,16 +9,14 @@ export class FreelancersList {
     }
 
     async getFreelancers() {
-        const result = await HttpUtils.request('/freelancers');
+        const response = await FreelancersService.getFreelancers();
 
-        if (result.redirect) {
-            return this.openNewRoute(result.redirect);
+        if (response.error) {
+            alert(response.error);
+            return response.redirect ? this.openNewRoute(response.redirect) : null;
         }
 
-        if (result.error || !result.response || (result.response && (result.response.error || !result.response.freelancers))) {
-            return alert('Возникла ошибка при запросе фрилансеров. Обратитесь в поддержку');
-        }
-        this.showRecords(result.response.freelancers);
+        this.showRecords(response.freelancers);
     }
 
     showRecords(freelancers) {
@@ -34,14 +32,7 @@ export class FreelancersList {
             trElement.insertCell().innerText = freelancers[i].education;
             trElement.insertCell().innerText = freelancers[i].location;
             trElement.insertCell().innerText = freelancers[i].skills;
-            trElement.insertCell().innerHTML = `
-                <div class="freelancer-tools">
-                    <a href="/freelancers/view?id=${freelancers[i].id}" class="fas fa-eye"></a>
-                    <a href="/freelancers/edit?id=${freelancers[i].id}" class="fas fa-edit"></a>
-                    <a href="/freelancers/delete?id=${freelancers[i].id}" class="fas fa-trash"></a>
-                </div>
-            `;
-
+            trElement.insertCell().innerHTML = CommonUtils.generateGridToolsColumn('freelancers', freelancers[i].id);
             recordsElement.appendChild(trElement);
         }
 

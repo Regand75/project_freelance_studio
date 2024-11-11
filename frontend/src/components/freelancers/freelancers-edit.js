@@ -1,14 +1,15 @@
-import {HttpUtils} from "../../utils/http-utils";
 import config from "../../config/config";
 import {CommonUtils} from "../../utils/common-utils";
 import {FileUtils} from "../../utils/file-utils";
+import {ValidationUtils} from "../../utils/validation-utils";
+import {UrlUtils} from "../../utils/url-utils";
+import {FreelancersService} from "../../services/freelancers-service";
 
 export class FreelancersEdit {
     constructor(openNewRoute) {
         this.openNewRoute = openNewRoute;
 
-        const urlParams = new URLSearchParams(window.location.search); // создаем объект, который позволяет работать с параметрами строки запроса в URL
-        const id = urlParams.get('id'); // получаем id из текущего URL
+        const id = UrlUtils.getUrlParam('id'); // получаем id из текущего URL
         if (!id) {
             return this.openNewRoute('/');
         }
@@ -16,6 +17,22 @@ export class FreelancersEdit {
         document.getElementById('updateButton').addEventListener('click', this.updateFreelancer.bind(this));
         bsCustomFileInput.init();
 
+        this.findElements();
+
+        this.validations = [
+            {element: this.nameInputElement},
+            {element: this.lastNameInputElement},
+            {element: this.educationInputElement},
+            {element: this.locationInputElement},
+            {element: this.skillsInputElement},
+            {element: this.infoInputElement},
+            {element: this.emailInputElement, options: {pattern: /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/}},
+        ];
+
+        this.getFreelancer(id).then();
+    }
+
+    findElements() {
         this.nameInputElement = document.getElementById('nameInput');
         this.lastNameInputElement = document.getElementById('lastNameInput');
         this.emailInputElement = document.getElementById('emailInput');
@@ -25,24 +42,18 @@ export class FreelancersEdit {
         this.infoInputElement = document.getElementById('infoInput');
         this.levelSelectElement = document.getElementById('levelSelect');
         this.avatarInputElement = document.getElementById('avatarInput');
-
-        this.getFreelancer(id).then();
     }
 
     async getFreelancer(id) {
-        const result = await HttpUtils.request(`/freelancers/${id}`);
+        const response = await FreelancersService.getFreelancer(id);
 
-        if (result.redirect) {
-            return this.openNewRoute(result.redirect);
+        if (response.error) {
+            alert(response.error);
+            return response.redirect ? this.openNewRoute(response.redirect) : null;
         }
 
-        if (result.error || !result.response || (result.response && result.response.error)) {
-            console.log(result.response.message);
-            return alert('Возникла ошибка при запросе фрилансера. Обратитесь в поддержку');
-        }
-
-        this.freelancerOriginalData = result.response;
-        this.showFreelancer(result.response);
+        this.freelancerOriginalData = response.freelancer;
+        this.showFreelancer(response.freelancer);
     }
 
     showFreelancer(freelancer) {
@@ -70,40 +81,10 @@ export class FreelancersEdit {
         }
     }
 
-    validateForm() {
-        let isValid = true;
-        let textInputArray = [
-            this.nameInputElement,
-            this.lastNameInputElement,
-            this.educationInputElement,
-            this.locationInputElement,
-            this.skillsInputElement,
-            this.infoInputElement,
-        ];
-
-        for (let i = 0; i < textInputArray.length; i++) {
-            // валидация полей
-            if (textInputArray[i].value) {
-                textInputArray[i].classList.remove('is-invalid');
-            } else {
-                textInputArray[i].classList.add('is-invalid');
-                isValid = false;
-            }
-        }
-
-        // валидация поля email
-        if (this.emailInputElement.value && this.emailInputElement.value.match(/^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/)) {
-            this.emailInputElement.classList.remove('is-invalid');
-        } else {
-            this.emailInputElement.classList.add('is-invalid');
-            isValid = false;
-        }
-        return isValid;
-    }
-
     async updateFreelancer(e) {
         e.preventDefault();
-        if (this.validateForm()) {
+
+        if (ValidationUtils.validateForm(this.validations)) {
             const changedData = {};
             if (this.nameInputElement.value !== this.freelancerOriginalData.name) {
                 changedData.name = this.nameInputElement.value;
@@ -135,16 +116,13 @@ export class FreelancersEdit {
 
             // проверяем пустой объект или нет и делает запрос на редактирование
             if (Object.keys(changedData).length > 0) {
-                const result = await HttpUtils.request(`/freelancers/${this.freelancerOriginalData.id}`, 'PUT', true, changedData);
+                const response = await FreelancersService.updateFreelancer(this.freelancerOriginalData.id, changedData);
 
-                if (result.redirect) {
-                    return this.openNewRoute(result.redirect);
+                if (response.error) {
+                    alert(response.error);
+                    return response.redirect ? this.openNewRoute(response.redirect) : null;
                 }
 
-                if (result.error || !result.response || (result.response && result.response.error)) {
-                    console.log(result.response.message);
-                    return alert('Возникла ошибка при редактировании фрилансера. Обратитесь в поддержку');
-                }
                 return this.openNewRoute(`/freelancers/view?id=${this.freelancerOriginalData.id}`);
             }
         }

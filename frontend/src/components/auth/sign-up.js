@@ -1,5 +1,6 @@
 import {AuthUtils} from "../../utils/auth-utils";
-import {HttpUtils} from "../../utils/http-utils";
+import {ValidationUtils} from "../../utils/validation-utils";
+import {AuthService} from "../../services/auth-service";
 
 export class SignUp {
     constructor(openNewRoute) {
@@ -10,6 +11,21 @@ export class SignUp {
             return this.openNewRoute('/');
         }
 
+        this.findElements();
+
+        document.getElementById('process-button').addEventListener('click', this.signUp.bind(this));
+
+        this.validations = [
+            {element: this.nameElement},
+            {element: this.lastNameElement},
+            {element: this.emailElement, options: {pattern: /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/}},
+            {element: this.passwordElement, options: {pattern: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,}$/}},
+            {element: this.passwordRepeatElement, options: {compareTo: this.passwordElement.value}},
+            {element: this.agreeElement, options: {checked: true}},
+        ];
+    }
+
+    findElements() {
         this.nameElement = document.getElementById('name');
         this.lastNameElement = document.getElementById('last-name');
         this.emailElement = document.getElementById('email');
@@ -17,84 +33,35 @@ export class SignUp {
         this.passwordRepeatElement = document.getElementById('password-repeat');
         this.agreeElement = document.getElementById('agree');
         this.commonErrorElement = document.getElementById('common-error');
-        document.getElementById('process-button').addEventListener('click', this.signUp.bind(this));
-    }
-
-    validateForm() {
-        let isValid = true;
-
-        // валидация поля name
-        if (this.nameElement.value) {
-            this.nameElement.classList.remove('is-invalid');
-        } else {
-            this.nameElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // валидация поля lastName
-        if (this.lastNameElement.value) {
-            this.lastNameElement.classList.remove('is-invalid');
-        } else {
-            this.lastNameElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // валидация поля email
-        if (this.emailElement.value && this.emailElement.value.match(/^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/)) {
-            this.emailElement.classList.remove('is-invalid');
-        } else {
-            this.emailElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // валидация поля password
-        if (this.passwordElement.value && this.passwordElement.value.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,}$/)) {
-            this.passwordElement.classList.remove('is-invalid');
-        } else {
-            this.passwordElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // валидация поля password-repeat
-        if (this.passwordRepeatElement.value && this.passwordRepeatElement.value === this.passwordElement.value) {
-            this.passwordRepeatElement.classList.remove('is-invalid');
-        } else {
-            this.passwordRepeatElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // валидация поля agree
-        if (this.agreeElement.checked) {
-            this.agreeElement.classList.remove('is-invalid');
-        } else {
-            this.agreeElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        return isValid;
     }
 
     async signUp() {
         this.commonErrorElement.style.display = 'none';
-        if (this.validateForm()) {
-            const result = await HttpUtils.request('/signup', 'POST', false, {
+        // присваиваем полю passwordRepeatElement значение
+        this.validations.forEach(item => {
+            if (item.element === this.passwordRepeatElement) {
+                item.options.compareTo = this.passwordElement.value;
+            }
+        });
+        if (ValidationUtils.validateForm(this.validations)) {
+            const signupResult = await AuthService.signUp({
                 name: this.nameElement.value,
                 lastName: this.lastNameElement.value,
                 email: this.emailElement.value,
                 password: this.passwordElement.value,
             });
 
-            if (result.error || !result.response || (result.response && (!result.response.accessToken || !result.response.refreshToken || !result.response.name || !result.response.id))) {
-                this.commonErrorElement.style.display = 'block';
-                return;
-            }
-            // записывает данные в localStorage
-            AuthUtils.setAuthInfo(result.response.accessToken, result.response.refreshToken, {
-                id: result.response.id,
-                name: result.response.name
-            });
+            if (signupResult) {
+                // записывает данные в localStorage
+                AuthUtils.setAuthInfo(signupResult.accessToken, signupResult.refreshToken, {
+                    id: signupResult.id,
+                    name: signupResult.name
+                });
 
-            this.openNewRoute('/');
+                return this.openNewRoute('/');
+            }
+
+            this.commonErrorElement.style.display = 'block';
         }
     }
 }

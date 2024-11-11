@@ -1,11 +1,11 @@
-import {HttpUtils} from "../../utils/http-utils";
+import {UrlUtils} from "../../utils/url-utils";
+import {OrdersService} from "../../services/orders-service";
 
 export class OrdersDelete {
     constructor(openNewRoute) {
         this.openNewRoute = openNewRoute;
 
-        const urlParams = new URLSearchParams(window.location.search); // создаем объект, который позволяет работать с параметрами строки запроса в URL
-        const id = urlParams.get('id'); // получаем id из текущего URL
+        const id = UrlUtils.getUrlParam('id'); // получаем id из текущего URL
         if (!id) {
             return this.openNewRoute('/');
         }
@@ -14,16 +14,13 @@ export class OrdersDelete {
     }
 
     async deleteOrder(id) {
-        const result = await HttpUtils.request(`/orders/${id}`, 'DELETE', true);
+        const response = await OrdersService.deleteOrder(id);
 
-        if (result.redirect) {
-            return this.openNewRoute(result.redirect);
+        if (response.error) {
+            alert(response.error);
+            return response.redirect ? this.openNewRoute(response.redirect) : null;
         }
 
-        if (result.error || !result.response || (result.response && result.response.error)) {
-            console.log(result.response.message);
-            return alert('Возникла ошибка при удалении заказа. Обратитесь в поддержку');
-        }
         return this.openNewRoute(`/orders`);
     }
 }

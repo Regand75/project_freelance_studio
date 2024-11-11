@@ -1,5 +1,6 @@
 import {AuthUtils} from "../../utils/auth-utils";
-import {HttpUtils} from "../../utils/http-utils";
+import {ValidationUtils} from "../../utils/validation-utils";
+import {AuthService} from "../../services/auth-service";
 
 export class Login {
     constructor(openNewRoute) {
@@ -10,54 +11,43 @@ export class Login {
             return this.openNewRoute('/');
         }
 
+        this.findElements();
+
+        document.getElementById('process-button').addEventListener('click', this.login.bind(this));
+
+        this.validations = [
+            {element: this.passwordElement},
+            {element: this.emailElement, options: {pattern: /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/}},
+        ];
+    }
+
+    findElements() {
         this.emailElement = document.getElementById('email');
         this.passwordElement = document.getElementById('password');
         this.rememberMeElement = document.getElementById('remember-me');
         this.commonErrorElement = document.getElementById('common-error');
-        document.getElementById('process-button').addEventListener('click', this.login.bind(this));
-    }
-
-    validateForm() {
-        let isValid = true;
-
-        // валидация поля email
-        if (this.emailElement.value && this.emailElement.value.match(/^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/)) {
-            this.emailElement.classList.remove('is-invalid');
-        } else {
-            this.emailElement.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // валидация поля password
-        if (this.passwordElement.value) {
-            this.passwordElement.classList.remove('is-invalid');
-        } else {
-            this.passwordElement.classList.add('is-invalid');
-            isValid = false;
-        }
-        return isValid;
     }
 
     async login() {
         this.commonErrorElement.style.display = 'none';
-        if (this.validateForm()) {
-            const result = await HttpUtils.request('/login', 'POST', false, {
+        if (ValidationUtils.validateForm(this.validations)) {
+            const loginResult = await AuthService.logIn({
                 email: this.emailElement.value,
                 password: this.passwordElement.value,
                 rememberMe: this.rememberMeElement.checked,
             });
 
-            if (result.error || !result.response || (result.response && (!result.response.accessToken || !result.response.refreshToken || !result.response.name || !result.response.id))) {
-                this.commonErrorElement.style.display = 'block';
-                return;
-            }
-            // записывает данные в localStorage
-            AuthUtils.setAuthInfo(result.response.accessToken, result.response.refreshToken, {
-                id: result.response.id,
-                name: result.response.name
-            });
+            if (loginResult) {
+                // записывает данные в localStorage
+                AuthUtils.setAuthInfo(loginResult.accessToken, loginResult.refreshToken, {
+                    id: loginResult.id,
+                    name: loginResult.name
+                });
 
-            this.openNewRoute('/');
+                return this.openNewRoute('/');
+            }
+
+            this.commonErrorElement.style.display = 'block';
         }
     }
 }
